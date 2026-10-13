@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Ejen Ali: Operation Colour Code</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#071126;color:white;
+ font-family:Arial,sans-serif;overflow:hidden;
+ touch-action:manipulation
+}
+button{font-family:inherit;cursor:pointer}
+#world{
+ position:fixed;inset:0;
+ background:
+ radial-gradient(ellipse at 50% 20%,#274e91 0%,transparent 48%),
+ linear-gradient(150deg,#101a49,#080d20 65%,#281044);
+ overflow:hidden
+}
+.grid{
+ position:absolute;left:-50%;right:-50%;bottom:-30%;
+ height:70%;transform:perspective(280px) rotateX(57deg);
+ background-image:
+ linear-gradient(#1be7ff35 1px,transparent 1px),
+ linear-gradient(90deg,#1be7ff35 1px,transparent 1px);
+ background-size:42px 42px;
+ animation:gridMove 4s linear infinite
+}
+@keyframes gridMove{to{background-position:0 42px,42px 0}}
+.orb{
+ position:absolute;border-radius:50%;filter:blur(2px);
+ opacity:.6;animation:float 5s ease-in-out infinite alternate
+}
+.o1{width:130px;height:130px;background:#00d9ff;top:16%;left:-45px;box-shadow:0 0 70px #00d9ff}
+.o2{width:100px;height:100px;background:#ff35c9;right:-25px;top:35%;box-shadow:0 0 65px #ff35c9}
+@keyframes float{to{transform:translateY(-22px)}}
+#hud{
+ position:absolute;top:10px;left:10px;right:10px;
+ display:none;justify-content:space-between;gap:8px;z-index:3
+}
+.hudbox{
+ background:#081630ed;border:1px solid #43e8ff;
+ border-radius:12px;padding:9px 12px;font-size:12px;
+ box-shadow:0 0 15px #20dfff30
+}
+#score{font-size:19px;color:#c9ff65;font-weight:bold}
+#progress{height:5px;width:100px;background:#263a60;border-radius:8px;margin-top:5px}
+#bar{height:100%;width:0;background:linear-gradient(90deg,#43e8ff,#d6ff57);border-radius:8px}
+#agent{
+ position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);
+ width:100px;height:155px;z-index:1;transition:transform .15s
+}
+.head{
+ position:absolute;left:29px;top:0;width:42px;height:43px;
+ background:linear-gradient(135deg,#f5c5a0,#b97759);
+ border-radius:45% 45% 40% 40%;border:3px solid #10172f
+}
+.hair{
+ position:absolute;left:27px;top:-4px;width:46px;height:23px;
+ background:#111522;border-radius:50% 50% 25% 25%;z-index:2
+}
+.visor{
+ position:absolute;left:29px;top:19px;width:42px;height:10px;
+ background:#45edff;box-shadow:0 0 12px #45edff;z-index:3;
+ border-radius:4px
+}
+.body{
+ position:absolute;left:20px;top:42px;width:60px;height:66px;
+ background:linear-gradient(130deg,#253b86,#111a43);
+ border:2px solid #43e8ff;border-radius:12px 12px 8px 8px;
+ box-shadow:0 0 20px #13dfff40
+}
+.badge{
+ position:absolute;left:42px;top:56px;width:16px;height:16px;
+ background:#ff48c9;border-radius:4px
+}
+.arm{
+ position:absolute;top:48px;width:17px;height:56px;
+ background:#35cfe9;border-radius:9px
+}
+.arm.left{left:5px;transform:rotate(10deg)}
+.arm.right{right:5px;transform:rotate(-10deg)}
+.leg{
+ position:absolute;top:104px;width:22px;height:43px;
+ background:#13182e;border:2px solid #5869b5;border-radius:5px
+}
+.leg.left{left:25px}.leg.right{right:25px}
+.station{
+ position:absolute;left:50%;top:67%;transform:translate(-50%,-50%);
+ width:112px;height:65px;border:2px solid #43e8ff;
+ border-radius:14px;background:linear-gradient(135deg,#142d5b,#251347);
+ display:flex;align-items:center;justify-content:center;
+ font-size:35px;box-shadow:0 0 28px #16dfff70;
+ animation:pulse 1.5s infinite alternate
+}
+@keyframes pulse{to{box-shadow:0 0 38px #ff40d080;transform:translate(-50%,-50%) scale(1.04)}}
+#question{
+ position:absolute;z-index:4;top:85px;left:50%;
+ transform:translateX(-50%);width:min(480px,calc(100% - 20px));
+ display:none;background:#07142df5;border:1px solid #43e8ff;
+ border-radius:18px;padding:14px;box-shadow:0 0 30px #0bdfff40
+}
+.tag{font-size:10px;letter-spacing:2px;color:#43e8ff;font-weight:bold;text-align:center}
+#clothing{text-align:center;font-size:57px;margin:5px}
+#sentence{text-align:center;font-size:19px;font-weight:900;margin:7px 0 12px}
+#answers{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.answer{
+ min-height:47px;border-radius:11px;border:1px solid #687fc3;
+ color:white;background:linear-gradient(135deg,#1b2e59,#292253);
+ font-size:13px;font-weight:bold;padding:8px
+}
+.answer.correct{background:#137d61;border-color:#7dffd0}
+.answer.wrong{background:#a92c67;border-color:#ffb2dd}
+#feedback{text-align:center;min-height:20px;margin-top:8px;font-size:12px;font-weight:bold;color:#d6ff57}
+#controls{
+ position:absolute;z-index:3;bottom:14px;left:15px;right:15px;
+ display:none;align-items:end;justify-content:space-between
+}
+#joyBase{
+ width:105px;height:105px;border-radius:50%;
+ background:#142a53d9;border:2px solid #43e8ff;
+ position:relative;touch-action:none
+}
+#joy{
+ position:absolute;width:43px;height:43px;left:29px;top:29px;
+ background:linear-gradient(135deg,#43e8ff,#9272ff);
+ border-radius:50%;box-shadow:0 0 15px #43e8ff
+}
+#scan{
+ width:75px;height:75px;border-radius:50%;border:2px solid #ff8bde;
+ background:linear-gradient(135deg,#ff42c7,#8c44ff);
+ color:white;font-weight:1000;box-shadow:0 0 25px #ff42c750
+}
+#hint{
+ position:absolute;bottom:125px;left:50%;transform:translateX(-50%);
+ width:max-content;max-width:90%;text-align:center;
+ background:#07142dcc;border:1px solid #ffffff35;border-radius:20px;
+ padding:7px 12px;font-size:11px;display:none
+}
+.overlay{
+ position:absolute;inset:0;z-index:10;display:flex;align-items:center;
+ justify-content:center;padding:18px;
+ background:#050b20a8
+}
+.panel{
+ width:min(470px,100%);text-align:center;padding:24px 20px;
+ border-radius:24px;border:1px solid #43e8ff;
+ background:linear-gradient(145deg,#0c1c40f7,#261345f7);
+ box-shadow:0 0 45px #14dfff25
+}
+.eyebrow{font-size:11px;letter-spacing:3px;color:#43e8ff;font-weight:bold}
+h1{font-size:clamp(32px,8vw,48px);line-height:1;margin:14px 0}
+.accent{color:#43e8ff}
+.panel p{font-size:14px;line-height:1.6;color:#d9e4ff}
+.mainbtn{
+ border:0;border-radius:13px;padding:14px 22px;
+ background:linear-gradient(90deg,#43e8ff,#a08aff);
+ color:#071126;font-size:15px;font-weight:1000
+}
+#end{display:none}
+@media(max-height:650px){
+ #question{top:66px;padding:9px}
+ #clothing{font-size:40px;margin:2px}
+ #sentence{font-size:16px;margin:4px}
+ .answer{min-height:38px;padding:6px;font-size:12px}
+ #controls{bottom:8px}
+ #joyBase{width:85px;height:85px}
+ #joy{left:20px;top:20px}
+ #scan{width:63px;height:63px}
+ #hint{bottom:100px}
+}
+</style>
+</head>
+<body>
+<div id="world">
+ <div class="grid"></div><div class="orb o1"></div><div class="orb o2"></div>
+ <div id="agent">
+  <div class="hair"></div><div class="head"></div><div class="visor"></div>
+  <div class="body"></div><div class="badge"></div>
+  <div class="arm left"></div><div class="arm right"></div>
+  <div class="leg left"></div><div class="leg right"></div>
+ </div>
+ <div class="station" id="station">📡</div>
+</div>
+<div id="hud">
+ <div class="hudbox"><span style="color:#43e8ff">MATA AGENT</span><br>COLOUR CODE
+  <div id="progress"><div id="bar"></div></div>
+ </div>
+ <div class="hudbox" style="text-align:right">SCORE<br><span id="score">0</span> / 20<br>
+  <span id="round">MISSION 1</span>
+ </div>
+</div>
+<div id="question">
+ <div class="tag">SCAN THE CLOTHING • CHOOSE THE SENTENCE</div>
+ <div id="clothing">👕</div>
+ <div id="sentence">This is a red shirt.</div>
+ <div id="answers"></div>
+ <div id="feedback">Choose the correct sentence.</div>
+</div>
+<div id="hint">Move closer to the scan station • Tap SCAN</div>
+<div id="controls">
+ <div id="joyBase"><div id="joy"></div></div>
+ <button id="scan">SCAN</button>
+</div>
+<div id="start" class="overlay">
+ <div class="panel">
+  <div class="eyebrow">MATA TRAINING SIMULATOR</div>
+  <h1>OPERATION<br><span class="accent">COLOUR CODE</span></h1>
+  <p>Agent! The clothing scanner is offline. Move around the training zone and complete 20 English missions.</p>
+  <p><b>This is a + colour + clothing</b><br><b>These are + colour + clothing</b></p>
+  <p>📱 Mobile controls • 🎯 Singular & plural • 🏆 Score challenge</p>
+  <button class="mainbtn" id="startBtn">START MISSION ▶</button>
+ </div>
+</div>
+<div id="end" class="overlay">
+ <div class="panel">
+  <div class="eyebrow">MATA MISSION REPORT</div>
+  <h1 id="endTitle">MISSION COMPLETE!</h1>
+  <p id="result" style="font-size:24px;color:#d6ff57;font-weight:900"></p>
+  <p id="message"></p>
+  <button class="mainbtn" id="again">PLAY AGAIN ↻</button>
+ </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const single=[
+ {word:'shirt',emoji:'👕'},{word:'skirt',emoji:'👗'},
+ {word:'dress',emoji:'👗'},{word:'hat',emoji:'🧢'},
+ {word:'jacket',emoji:'🧥'},{word:'T-shirt',emoji:'👕'},
+ {word:'sock',emoji:'🧦'},{word:'shoe',emoji:'👟'}
+];
+const plural=[
+ {word:'shorts',emoji:'🩳'},{word:'trousers',emoji:'👖'},
+ {word:'jeans',emoji:'👖'},{word:'socks',emoji:'🧦'},
+ {word:'shoes',emoji:'👟'},{word:'gloves',emoji:'🧤'},
+ {word:'boots',emoji:'🥾'},{word:'sunglasses',emoji:'🕶️'}
+];
+const colours=['red','blue','yellow','green','purple','orange','pink','black'];
+const emoji={red:'🔴',blue:'🔵',yellow:'🟡',green:'🟢',purple:'🟣',orange:'🟠',pink:'🩷',black:'⚫'};
+let round=0,score=0,current=null,locked=false,playing=false,near=false;
+let joy={x:0,y:0,active:false},px=0,pz=0,stationX=0,stationZ=0;
+const world=$('world'),agent=$('agent'),station=$('station');
+function shuffle(a){return a.sort(()=>Math.random()-.5)}
+function isPlural(item){return plural.some(x=>x.word===item.word)}
+function correctSentence(item,color){return isPlural(item)?`These are ${color} ${item.word}.`:`This is a ${color} ${item.word}.`}
+function makeQuestion(){
+ const item=(round%2===0?single:plural)[Math.floor(Math.random()*(round%2===0?single:plural).length)];
+ const color=colours[Math.floor(Math.random()*colours.length)];
+ const correct=correctSentence(item,color);
+ const bad1=isPlural(item)?`This is a ${color} ${item.word}.`:`These are ${color} ${item.word}.`;
+ const bad2=isPlural(item)?`These are ${color} ${item.word}.`:`This is ${color} ${item.word}.`;
+ const bad3=isPlural(item)?`These is ${color} ${item.word}.`:`This are a ${color} ${item.word}.`;
+ return {item,color,correct,options:shuffle([...new Set([correct,bad1,bad2,bad3])])};
+}
+function showQuestion(){
+ current=makeQuestion();locked=false;
+ $('clothing').textContent=current.item.emoji+' '+emoji[current.color];$('sentence').textContent=`The scanner found ${current.color} ${current.item.word}!`;
+ $('answers').innerHTML='';
+ current.options.forEach(option=>{
+  const b=document.createElement('button');b.className='answer';b.textContent=option;
+  b.onclick=()=>answer(b,option);$('answers').appendChild(b);
+ });
+ $('feedback').textContent='Choose the correct sentence.';$('question').style.display='block';
+}
+function answer(btn,option){
+ if(locked)return;locked=true;
+ const correct=option===current.correct;
+ if(correct){score++;$('score').textContent=score;$('feedback').textContent='✓ Excellent, Agent!';btn.classList.add('correct')}
+ else{$('feedback').textContent='Correct answer: '+current.correct;btn.classList.add('wrong')}
+ [...document.querySelectorAll('.answer')].forEach(b=>{if(b.textContent===current.correct)b.classList.add('correct')});
+ round++;$('bar').style.width=(round/20*100)+'%';
+ setTimeout(()=>{
+  if(round>=20)finish();
+  else{$('round').textContent='MISSION '+(round+1);$('question').style.display='none';locked=false;moveStation()}
+ },correct?800:1600);
+}
+function moveStation(){
+ const a=Math.random()*Math.PI*2,r=4+Math.random()*3;
+ stationX=Math.cos(a)*r;stationZ=Math.sin(a)*r;
+ station.style.left=(50+stationX*2.1)+'%';
+ station.style.top=(64+stationZ*1.3)+'%';
+ station.style.transform='translate(-50%,-50%)';
+ station.style.background='linear-gradient(135deg,#142d5b,#251347)';
+ near=false;
+}
+function finish(){
+ playing=false;$('controls').style.display='none';$('hint').style.display='none';$('hud').style.display='none';$('question').style.display='none';$('end').style.display='flex';
+ $('endTitle').textContent=score>=16?'ELITE AGENT!':'MISSION COMPLETE!';$('result').textContent=`Your score: ${score} / 20`;
+ $('message').textContent=score>=16?'Outstanding! You have mastered the colour-code mission.':'Good effort, Agent! Remember: “This is a” for one item. “These are” for more than one.';
+}
+function start(){
+ round=0;score=0;px=0;pz=0;playing=true;
+ $('start').style.display='none';$('end').style.display='none';
+ $('hud').style.display='flex';$('controls').style.display='flex';$('hint').style.display='block';$('score').textContent='0';$('round').textContent='MISSION 1';$('bar').style.width='0%';
+ moveStation();showQuestion();
+}
+$('startBtn').onclick=start;$('again').onclick=start;
+$('scan').onclick=()=>{
+ if(!playing||locked)return;
+ if(near)showQuestion();
+ else{$('hint').textContent='Move closer to the glowing scanner!';setTimeout(()=>$('hint').textContent='Move closer to the scan station • Tap SCAN',1200)}
+};
+const base=$('joyBase'),knob=$('joy');
+function setJoy(e){
+ const r=base.getBoundingClientRect();let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+ const max=28,d=Math.hypot(dx,dy);if(d>max){dx=dx/d*max;dy=dy/d*max}
+ joy.x=dx/max;joy.y=dy/max;knob.style.left=(r.width/2-21+dx)+'px';knob.style.top=(r.height/2-21+dy)+'px';
+}
+base.addEventListener('pointerdown',e=>{joy.active=true;base.setPointerCapture(e.pointerId);setJoy(e)});
+base.addEventListener('pointermove',e=>{if(joy.active)setJoy(e)});
+function reset(){joy.active=false;joy.x=0;joy.y=0;knob.style.left='29px';knob.style.top='29px'}
+base.addEventListener('pointerup',reset);base.addEventListener('pointercancel',reset);
+const keys={};addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' ')$('scan').click()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+let last=0;
+function animate(t){
+ const dt=Math.min((t-last)/1000,.04)||0;last=t;
+ if(playing){
+  let dx=joy.x,dz=joy.y;
+  if(keys.a||keys.arrowleft)dx=-1;if(keys.d||keys.arrowright)dx=1;
+  if(keys.w||keys.arrowup)dz=-1;if(keys.s||keys.arrowdown)dz=1;
+  const len=Math.hypot(dx,dz)||1;
+  px=Math.max(-10,Math.min(10,px+dx/len*dt*4));
+  pz=Math.max(-10,Math.min(10,pz+dz/len*dt*4));
+  agent.style.left=(50+px*2.1)+'%';agent.style.top=(42+pz*1.1)+'%';
+  agent.style.transform=`translate(-50%,-50%) rotate(${dx*5}deg)`;
+  near=Math.hypot(px-stationX,pz-stationZ)<3.4;
+  station.style.filter=near?'brightness(1.7)':'brightness(1)';
+  station.style.boxShadow=near?'0 0 45px #d6ff57':'0 0 28px #16dfff70';
+ }
+ requestAnimationFrame(animate)
+}
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
